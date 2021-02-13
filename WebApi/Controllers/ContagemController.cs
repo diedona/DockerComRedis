@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +12,30 @@ namespace WebApi.Controllers
     [ApiController]
     public class ContagemController : ControllerBase
     {
-        public IActionResult Get()
+        private readonly IDistributedCache _cache;
+
+        public ContagemController(IDistributedCache cache)
         {
-            return Ok("Ok");
+            _cache = cache;
+        }
+
+        public async Task<IActionResult> Get()
+        {
+            string hits = await _cache.GetStringAsync("hits");
+            if (string.IsNullOrEmpty(hits))
+                hits = await CriarHits();
+
+            int hitsIncrementado = int.Parse(hits);
+            hitsIncrementado++;
+            await _cache.SetStringAsync("hits", hitsIncrementado.ToString());
+
+            return Ok(hitsIncrementado);
+        }
+
+        private async Task<string> CriarHits()
+        {
+            await _cache.SetStringAsync("hits", "0");
+            return await _cache.GetStringAsync("hits");
         }
     }
 }

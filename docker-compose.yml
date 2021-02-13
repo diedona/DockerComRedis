@@ -3,6 +3,16 @@ version: '3.4'
 services:
   webapi:
     image: ${DOCKER_REGISTRY-}webapi
+    container_name: web_api_ddona
+    depends_on: 
+      - db_redis
     build:
       context: .
       dockerfile: WebApi/Dockerfile
+
+  db_redis:
+    image: redis
+    container_name: redis_ddona
+    command: redis-server --requirepass @xap3r
+    ports:
+      - "6379:6379"
